@@ -19,6 +19,7 @@ class RequestValidator(Schema):
     result_limit = fields.Int(required=False, validate=Range(min=1, max=10000))
     location_limit = fields.Int(required=False, validate=Range(min=1, max=10))
 
+
 def generate_bokeh_plot(chosen_location_coords, chosen_location_dataframes, city, result_limit, unit, var):
     """
     Returns html for generating a bokeh plot
@@ -35,16 +36,16 @@ def generate_bokeh_plot(chosen_location_coords, chosen_location_dataframes, city
     colors = get_unique_colors(len(chosen_location_dataframes))
 
     for color, df, ll in zip(colors, chosen_location_dataframes, chosen_location_coords):
-        bokeh_figure.line('date', 'val', source=df, alpha=1, legend_label=df['location'].iloc[0] + ': ' + str(ll)[1:-1],
-                          color=color, line_dash='solid')
+        bokeh_figure.line('datetime', 'val', source=df, alpha=1,
+                          legend_label=df['location'].iloc[0] + ': ' + str(ll)[1:-1], color=color, line_dash='solid')
 
     bokeh_figure.legend.location = "top_left"
     bokeh_figure.legend.click_policy = "hide"
 
     bokeh_figure.add_tools(HoverTool(show_arrow=False, line_policy='next', tooltips=[
-        ('date', '@date{%F}'),
+        ('datetime', '@datetime{%Y-%m-%d %l:%M %p}'),
         (var, '$data_y')
-    ], formatters={'@date': 'datetime'}))
+    ], formatters={'@datetime': 'datetime'}))
     bokeh_figure.xaxis.formatter = DatetimeTickFormatter(
         days=["%Y-%m-%d"],
         months=["%Y-%m-%d"],
@@ -76,6 +77,7 @@ def get_dataframes_for_parameters(location_coords, location_ids, location_limit,
     :param var: the variable to query for
     :return: the filtered location coordinates, dataframes and unit to plot
     """
+    unit = None
     chosen_location_dataframes = []
     chosen_location_coords = []
     for idx, loc in enumerate(location_ids):
@@ -102,7 +104,7 @@ def get_dataframe_for_response(loc, r):
     """
     df = pd.DataFrame(
         [[dateutil.parser.parse(i['date']['local']), i['value'], loc] for i in r.json()['results']],
-        columns=['date', 'val', 'location'])
+        columns=['datetime', 'val', 'location'])
     return df
 
 
